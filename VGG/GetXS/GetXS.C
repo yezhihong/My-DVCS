@@ -41,13 +41,14 @@ int main(){
 
 	const Double_t E0 = 11.0;//GeV
 	const TString Target = "Neutron";
-	const TString Data_Dir = Form("/work/halla/solid/dvcs/VGG/%s_%d", Target.Data(), (int)(E0));
+	const TString Data_Dir = "/work/halla/solid/yez/dvcs/VGG/";
+	Int_t Debug = 3;
 
 	Double_t Q2, xb, t, phi;
 	TString TargetPol;//Tx, Ty, L
 
 	DVCSGrid *grid = new DVCSGrid();
-    grid->Init(E0, Target.Data(), Data_Dir.Data());
+    grid->Init(E0, Target.Data(), Data_Dir.Data(), Debug);
 
 	//reset the kinematic ranges and sizes if they have been changed from the default values
 	//           Min, Max, Step
@@ -55,6 +56,8 @@ int main(){
 	//SetXbRange(0.05, 0.75, 0.05);
 	//SetTRange(0.1, 2.5, 0.1); //GeV2
 	//SetPhiRange(0.0, 360.0, 15.0); //degree
+	
+    Int_t err = -100;
 
 	cerr<<"--- Q2 (GeV2) = "; cin >> Q2;
 	cerr<<"---        xb = "; cin >> xb;
@@ -62,20 +65,21 @@ int main(){
 	cerr<<"--- phi (Deg) = "; cin >> phi;
 	cerr<<"--- Target Polarization (L, Tx, Ty) = "; cin >> TargetPol;
 
-    grid->FindBin(Q2, xb, t, phi);
+	grid->FindBin(Q2, xb, t, phi);//last input, >0 to print the finding result
 	grid->PrintRanges();
-	grid->LoadXS(TargetPol);
-	grid->PrintXS();
+	err = grid->LoadXS(TargetPol);
+	if(err>=0){
+		grid->PrintXS();
 
-	Double_t XS_PP = grid->GetSigmaPP();//++
-	Double_t XS_PM = grid->GetSigmaPM();//+-
-	Double_t XS_MP = grid->GetSigmaMP();//-+
-	Double_t XS_MM = grid->GetSigmaMM();//--
-	Double_t XS = grid->GetSigma();//average of four XSs above
-	Double_t XS_BS = grid->GetSigmaBS();//beam spin asym
-	Double_t XS_TS = grid->GetSigmaTS();//target spin asym
-	Double_t XS_DS = grid->GetSigmaDS();//double spin asym
-
+		Double_t XS_PP = grid->GetSigmaPP();//++
+		Double_t XS_PM = grid->GetSigmaPM();//+-
+		Double_t XS_MP = grid->GetSigmaMP();//-+
+		Double_t XS_MM = grid->GetSigmaMM();//--
+		Double_t XS = grid->GetSigma();//average of four XSs above
+		Double_t XS_BS = grid->GetSigmaBS();//beam spin asym
+		Double_t XS_TS = grid->GetSigmaTS();//target spin asym
+		Double_t XS_DS = grid->GetSigmaDS();//double spin asym
+	}
 
 	delete grid;
 }

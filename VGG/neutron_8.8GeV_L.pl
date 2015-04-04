@@ -4,7 +4,7 @@ $VGG_CMD = "$WORK_DIR/env_ld.sh";
 $run_number = $ARGV[0];
 $split = $ARGV[1];
 $Mn =0.939565378;
-$Energy = 11.;
+$Energy = 8.8;
 $E0 = int($Energy);
 $Q2_Min = 1;
 $Q2_Max = 9;
@@ -58,8 +58,8 @@ for ( $iQ2=0;$iQ2<$Q2_Bin;$iQ2++){#from 1.0 upto 10.0
 		$it=0;
 		while ($t<=$t_Max){
 
-#			$filename = "$WORK_DIR/inputs_np/E$E0-$TP-Q2-$iQ2-xb-$ixb-t-$it";
-#			unless (-e $filename) {
+			#		$filename = "$WORK_DIR/inputs_np/E$E0-$TP-Q2-$iQ2-xb-$ixb-t-$it";
+			#	unless (-e $filename) {
 			$datafilename = "$DATA_DIR/E$E0-$TP-Q2-$iQ2-xb-$ixb-t-$it.dat";
 			unless (-e $datafilename) {
 				#unless (0) {

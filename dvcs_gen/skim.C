@@ -74,12 +74,13 @@ Int_t main(Int_t argc, char *argv[]){
 	}
 
 	Double_t vertexz, E0; 
-	Double_t ePx_ini, ePy_ini, ePz_ini, hPx_ini, hPy_ini,hPz_ini;
+	Double_t ePx_ini, ePy_ini, ePz_ini;
+    //Double_t hP_ini, hPx_ini, hPy_ini,hPz_ini,hTheta_ini,hPhi_ini;
 	Double_t ePx, ePy, ePz, gPx, gPy, gPz, hPx, hPy, hPz;
-	Double_t eP_ini,hP_ini, eP, gP,hP;
+	Double_t eP_ini,eP, gP,hP;
 	Double_t Q2, x, t, phi, XS_P, XS_M,PSF;
-	Double_t ePhi_ini,hPhi_ini, ePhi, gPhi,hPhi;
-	Double_t eTheta_ini,hTheta_ini, eTheta, gTheta,hTheta;
+	Double_t ePhi_ini, ePhi, gPhi,hPhi;
+	Double_t eTheta_ini, eTheta, gTheta,hTheta;
 	Int_t Ngen,Nacc;
 
 	Double_t eP_res, eTheta_res, ePhi_res, ePx_res, ePy_res, ePz_res;
@@ -148,6 +149,37 @@ Int_t main(Int_t argc, char *argv[]){
 	T->SetBranchAddress("gPhi_res", &gPhi_res);
 	T->SetBranchAddress("gTheta_res", &gTheta_res);
 
+	Double_t SigmaPP_L, SigmaPM_L, SigmaMP_L, SigmaMM_L, Sigma_L, BSA_L, TSA_L, DSA_L;
+	Double_t SigmaPP_Tx, SigmaPM_Tx, SigmaMP_Tx, SigmaMM_Tx, Sigma_Tx, BSA_Tx, TSA_Tx, DSA_Tx;
+	Double_t SigmaPP_Ty, SigmaPM_Ty, SigmaMP_Ty, SigmaMM_Ty, Sigma_Ty, BSA_Ty, TSA_Ty, DSA_Ty;
+
+	T->SetBranchAddress("SigmaPP_L", &SigmaPP_L);
+	T->SetBranchAddress("SigmaPM_L", &SigmaPM_L);
+	T->SetBranchAddress("SigmaMP_L", &SigmaMP_L);
+	T->SetBranchAddress("SigmaMM_L", &SigmaMM_L);
+	T->SetBranchAddress("Sigma_L", &Sigma_L);
+	T->SetBranchAddress("BSA_L", &BSA_L);
+	T->SetBranchAddress("TSA_L", &TSA_L);
+	T->SetBranchAddress("DSA_L", &DSA_L);
+
+	T->SetBranchAddress("SigmaPP_Tx", &SigmaPP_Tx);
+	T->SetBranchAddress("SigmaPM_Tx", &SigmaPM_Tx);
+	T->SetBranchAddress("SigmaMP_Tx", &SigmaMP_Tx);
+	T->SetBranchAddress("SigmaMM_Tx", &SigmaMM_Tx);
+	T->SetBranchAddress("Sigma_Tx", &Sigma_Tx);
+	T->SetBranchAddress("BSA_Tx", &BSA_Tx);
+	T->SetBranchAddress("TSA_Tx", &TSA_Tx);
+	T->SetBranchAddress("DSA_Tx", &DSA_Tx);
+
+	T->SetBranchAddress("SigmaPP_Ty", &SigmaPP_Ty);
+	T->SetBranchAddress("SigmaPM_Ty", &SigmaPM_Ty);
+	T->SetBranchAddress("SigmaMP_Ty", &SigmaMP_Ty);
+	T->SetBranchAddress("SigmaMM_Ty", &SigmaMM_Ty);
+	T->SetBranchAddress("Sigma_Ty", &Sigma_Ty);
+	T->SetBranchAddress("BSA_Ty", &BSA_Ty);
+	T->SetBranchAddress("TSA_Ty", &TSA_Ty);
+	T->SetBranchAddress("DSA_Ty", &DSA_Ty);
+
 	Long64_t N_entries=T->GetEntries();
 	T->GetEntry(0);
 	Long64_t N_gen = Ngen*2;//11GeV and 8.8 GeV settings should have the same total generated events but please check
@@ -169,7 +201,7 @@ Int_t main(Int_t argc, char *argv[]){
     const Int_t x_bin = 8;
 	const Double_t x_cut[9] = {0.1, 0.16, 0.22, 0.28, 0.34, 0.40, 0.46, 0.52, 0.70};
 
-	Double_t weight_p = 0.0, weight_m = 0.0, time=0.0, ele_energy = 0.0;
+	Double_t weight = 0.0, time=0.0, ele_energy = 0.0;
 	for(int i=1;i<=Q2_bin;i++){
 		for(int j=1;j<=x_bin;j++){
 			Double_t Q2min = Q2_cut[i];
@@ -250,9 +282,36 @@ Int_t main(Int_t argc, char *argv[]){
 			t1->Branch("e_acc_l", &e_acc_l, "e_acc_l/D");
 			t1->Branch("g_acc_f", &g_acc_f, "g_acc_f/D");
 			t1->Branch("g_acc_l", &g_acc_l, "g_acc_l/D");
-			t1->Branch("weight_m", &weight_m, "weight_m/D");
-			t1->Branch("weight_p", &weight_p, "weight_p/D");
+			t1->Branch("weight", &weight, "weight/D");
 			t1->Branch("time", &time, "time/D");
+
+			t1->Branch("SigmaPP_L", &SigmaPP_L, "SigmaPP_L/D");
+			t1->Branch("SigmaPM_L", &SigmaPM_L, "SigmaPM_L/D");
+			t1->Branch("SigmaMP_L", &SigmaMP_L, "SigmaMP_L/D");
+			t1->Branch("SigmaMM_L", &SigmaMM_L, "SigmaMM_L/D");
+			t1->Branch("Sigma_L", &Sigma_L, "Sigma_L/D");
+			t1->Branch("BSA_L", &BSA_L, "BSA_L/D");
+			t1->Branch("TSA_L", &TSA_L, "TSA_L/D");
+			t1->Branch("DSA_L", &DSA_L, "DSA_L/D");
+
+			t1->Branch("SigmaPP_Tx", &SigmaPP_Tx, "SigmaPP_Tx/D");
+			t1->Branch("SigmaPM_Tx", &SigmaPM_Tx, "SigmaPM_Tx/D");
+			t1->Branch("SigmaMP_Tx", &SigmaMP_Tx, "SigmaMP_Tx/D");
+			t1->Branch("SigmaMM_Tx", &SigmaMM_Tx, "SigmaMM_Tx/D");
+			t1->Branch("Sigma_Tx", &Sigma_Tx, "Sigma_Tx/D");
+			t1->Branch("BSA_Tx", &BSA_Tx, "BSA_Tx/D");
+			t1->Branch("TSA_Tx", &TSA_Tx, "TSA_Tx/D");
+			t1->Branch("DSA_Tx", &DSA_Tx, "DSA_Tx/D");
+
+			t1->Branch("SigmaPP_Ty", &SigmaPP_Ty);
+			t1->Branch("SigmaPM_Ty", &SigmaPM_Ty);
+			t1->Branch("SigmaMP_Ty", &SigmaMP_Ty);
+			t1->Branch("SigmaMM_Ty", &SigmaMM_Ty);
+			t1->Branch("Sigma_Ty", &Sigma_Ty);
+			t1->Branch("BSA_Ty", &BSA_Ty, "BSA_Ty/D");
+			t1->Branch("TSA_Ty", &TSA_Ty, "TSA_Ty/D");
+			t1->Branch("DSA_Ty", &DSA_Ty, "dSA_Ty/D");
+
 			/*}}}*/
 
 			for (Int_t k=0;k<T->GetEntries();k++){
@@ -273,10 +332,11 @@ Int_t main(Int_t argc, char *argv[]){
 					time = day * 24 *3600; //sec
 					/*}}}*/
 
-				    double total_acceptance = (e_acc_f+e_acc_l) * (g_acc_f+g_acc_l);	
-					weight_p=XS_P*PSF/N_gen*nBcm2*Lumi*time*total_acceptance;   //in Count 
-					weight_m=XS_M*PSF/N_gen*nBcm2*Lumi*time*total_acceptance;   //in Count 
-	//				cerr<<Form("XS=%e,total_acceptance = %f, time=%e, weight_p=%f, weight_m=%f ", (XS_P+XS_M), total_acceptance, time,weight_p, weight_m)<<endl;
+					double total_acceptance = (e_acc_f+e_acc_l) * (g_acc_f+g_acc_l);	
+					weight=PSF/N_gen*nBcm2*Lumi*time*total_acceptance;   //in Count after multiplied by XS which will be applied in next step 
+					//weight_p=XS_P*PSF/N_gen*nBcm2*Lumi*time*total_acceptance;   //in Count 
+					//weight_m=XS_M*PSF/N_gen*nBcm2*Lumi*time*total_acceptance;   //in Count 
+					//				cerr<<Form("XS=%e,total_acceptance = %f, time=%e, weight_p=%f, weight_m=%f ", (XS_P+XS_M), total_acceptance, time,weight_p, weight_m)<<endl;
 		
 					t1->Fill();
 					if(!(i%10000))

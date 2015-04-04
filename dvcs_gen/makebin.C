@@ -94,19 +94,20 @@ int makebin(int target_flag, int Q2_flag, int x_flag){
 	TTree *T = (TTree*) file->Get("T");
 
 	Double_t vertexz, E0; 
-	Double_t ePx_ini, ePy_ini, ePz_ini, hPx_ini, hPy_ini,hPz_ini;
+	Double_t ePx_ini, ePy_ini, ePz_ini;
+    //Double_t	hP_ini, hPx_ini, hPy_ini,hPz_ini,hTheta_ini, hPhi_ini;
 	Double_t ePx, ePy, ePz, gPx, gPy, gPz, hPx, hPy, hPz;
-	Double_t eP_ini,hP_ini, eP, gP,hP;
+	Double_t eP_ini,eP, gP,hP;
 	Double_t Q2, x, t, phi, XS_P, XS_M,PSF;
-	Double_t ePhi_ini,hPhi_ini, ePhi, gPhi,hPhi;
-	Double_t eTheta_ini,hTheta_ini, eTheta, gTheta,hTheta;
+	Double_t ePhi_ini, ePhi, gPhi,hPhi;
+	Double_t eTheta_ini,eTheta, gTheta,hTheta;
 	Int_t Ngen,Nacc;
 
 	Double_t eP_res, eTheta_res, ePhi_res, ePx_res, ePy_res, ePz_res;
 	Double_t gP_res, gTheta_res, gPhi_res, gPx_res, gPy_res, gPz_res;
 	Double_t MM = 0.0,MM_res = 0.0, W=0.0, Wp=0.0;
 	Double_t e_acc_f= 0.0, e_acc_l= 0.0, g_acc_f=0, g_acc_l=0;
-	Double_t weight_p, weight_m, time;
+	Double_t weight, time;
 
 	T->SetBranchAddress("vertexz", &vertexz);
 	T->SetBranchAddress("E0", &E0);
@@ -169,8 +170,7 @@ int makebin(int target_flag, int Q2_flag, int x_flag){
 	T->SetBranchAddress("gPhi_res", &gPhi_res);
 	T->SetBranchAddress("gTheta_res", &gTheta_res);
 	
-	T->SetBranchAddress("weight_p", &weight_p);
-	T->SetBranchAddress("weight_m", &weight_m);
+	T->SetBranchAddress("weight", &weight);
 	T->SetBranchAddress("time", &time);
 
 	Long64_t N_entries=T->GetEntries();
@@ -189,8 +189,6 @@ int makebin(int target_flag, int Q2_flag, int x_flag){
 	//Temp, real bin size is determined by the events in each bin
 	const double T_MIN  =0.1;
 	const double T_MAX = 0.7;
-	const double T_STEP = 0.1;
-	const int t_bin = (int)((T_MAX-T_MIN)/T_STEP); 
 
 	const double Phi_STEP = 30.;
 	const double Phi_MIN = 0.0;
@@ -198,87 +196,91 @@ int makebin(int target_flag, int Q2_flag, int x_flag){
 	const int phi_bin = (int)((Phi_MAX-Phi_MIN)/Phi_STEP);
 
 	prefix = "./databases/";
-	TString filename = Form("%s_%d_%d.dat",target.Data(),Q2_flag,x_flag);
+	TString filename = Form("L_%s_%d_%d.dat",target.Data(),Q2_flag,x_flag);
 	TString new_filename = prefix + filename;
-	ofstream outf_total(new_filename);
+	ofstream outf_L(new_filename);
+
+	filename = Form("Tx_%s_%d_%d.dat",target.Data(),Q2_flag,x_flag);
+	new_filename = prefix + filename;
+	ofstream outf_Tx(new_filename);
+
+	filename = Form("Ty_%s_%d_%d.dat",target.Data(),Q2_flag,x_flag);
+	new_filename = prefix + filename;
+	ofstream outf_Ty(new_filename);
+		
+	/*Histograms{{{*/
+	//t
+	TH1F *h1 = new TH1F("h1","h1",1000,T_MIN,T_MAX);
+	//Q2
+	TH1F *h1Q2  =new TH1F("h1Q2","h1Q2",1000,1.,7.);
+	//x 
+	TH1F *h1x = new TH1F("h1x","h1x",1000,0.1,0.7);
+	// phi
+	TH1F *h1phi = new TH1F("h1phi","h1phi",1000.,Phi_MIN,Phi_MAX);
+	//t 
+	TH1F *h1t = new TH1F("h1t","h1t",1000,0.1,0.7);
+	/*}}}*/
 
 	TString histoname;
-	outf_total << phi_bin << endl;
+	outf_L << phi_bin << endl;
+	outf_Tx<< phi_bin << endl;
+	outf_Ty<< phi_bin << endl;
 	double phimin = 0.0, phimax = 0.0;
 	//loop through phi and t bin
 	for (Int_t i=0;i<phi_bin;i++){
 		phimin = Phi_MIN + i*Phi_STEP;
 		phimax = Phi_MIN + (i+1)*Phi_STEP;
-			
-		/*Histograms{{{*/
-		//phi
-		TH1F *h1  =new TH1F("h1","h1",1000,Phi_MIN,Phi_MAX);
-		//t
-		TH1F *h2 = new TH1F("h2","h2",1000,T_MIN,T_MAX);
-		/*}}}*/
 
+		//double Norm_Factor = (pow(polarization * target_factor*dilute_factor,2) * det_eff);
+		//double single_bin_raw = 1.0/Norm_Factor/pow(Asys,2);
+		double single_bin_raw = Nsys/det_eff;
+		int tb_max =0;
+		double t1[1000];
+		int new_bin = 0, nevent_t=0;
+		int tbin = 0;
+		double tmin = 0.0, tmax = 0.0;
+	
 		TString cut1,cut2;
-		cut1="(weight_p+weight_m)";
-		TCut cut(cut1);
-
-		/*X Binning{{{*/
+		TCut cut("1");
+		/*t Binning on L{{{*/
+		cut1="(weight*Sigma_L)";
 		cut2.Form("(phi>=%f&&phi<%f)",phimin,phimax);
 		cut2 = cut1 + "*" + cut2;
 		cut = cut2;
 		h1->Reset();
-		T->Project("h1","phi",cut);
-		h2->Reset();
-		T->Project("h2","t",cut);
-
-		//double Norm_Factor = (pow(polarization * target_factor*dilute_factor,2) * det_eff);
-		//double single_bin_raw = 1.0/Norm_Factor/pow(Asys,2);
-		//Double_t total_eve = h2->GetSum(); 
-		double single_bin_raw = Nsys/det_eff;
+		T->Project("h1","t",cut);
 
 		/*Count How many t bins{{{*/
-		double t1[1000];
-		int new_bin = 0, nevent_t=0;
+		new_bin = 0, nevent_t=0;
 		t1[0] = T_MIN;
 
-		int tb_max =0;
+		tb_max =0;
 		while(tb_max<1000){
 			new_bin++;
 			nevent_t = 0;
 
-			//	cerr<<Form("--- Start with t=%f, tb=%d",h2->GetBinCenter(tb_max),tb_max)<<endl;
-			//while(nevent_t < h2->GetSum()/tbin_fix&&tb_max<1000){
-			//while(nevent_t <=max(single_bin_raw,h2->GetSum()/6) &&tb_max<1000){
-			while(nevent_t <=h2->GetSum()/6 &&tb_max<1000){
-				nevent_t += h2->GetBinContent(tb_max++);
+			//	cerr<<Form("--- Start with t=%f, tb=%d",h1->GetBinCenter(tb_max),tb_max)<<endl;
+			//while(nevent_t < h1->GetSum()/tbin_fix&&tb_max<1000){
+			//while(nevent_t <=max(single_bin_raw,h1->GetSum()/6) &&tb_max<1000){
+			while(nevent_t <=h1->GetSum()/6 &&tb_max<1000){
+				nevent_t += h1->GetBinContent(tb_max++);
 			}
-			double tmax = h2->GetBinCenter(tb_max);
+			double tmax = h1->GetBinCenter(tb_max);
 
 			t1[new_bin] = tmax;
 			cerr<<Form("    #%d bin: t=%f, tb=%d, N=%e ", new_bin, tmax, tb_max, (double) nevent_t)<<endl;
 		}
-
-		int tbin = new_bin;
+		tbin = new_bin;
 		/*}}}*/
 
 	//	if (tbin<1) xbin = 1; //Counts as one bin if the statistic is really low
 
-		outf_total << i << "\t" << tbin << endl;
-		cerr    << Form("--- Total t-bin in #%d phi bin is %d with N=%e .vs. %e" ,i,tbin,single_bin_raw, h2->GetSum()/100) << endl;
-		Double_t tmin = 0.0, tmax = 0.0;
+		outf_L << i << "\t" << tbin << endl;
+		cerr    << Form("--- Total t-bin in #%d phi bin is %d with N=%e .vs. %e" ,i,tbin,single_bin_raw, h1->GetSum()/100) << endl;
+		tmin = 0.0, tmax = 0.0;
 		for (Int_t j=0;j<tbin;j++){
 			tmin = t1[j];
 			tmax = t1[j+1];
-
-			/*Histograms{{{*/
-			//Q2
-			TH1F *h1Q2  =new TH1F("h1Q2","h1Q2",1000,1.,7.);
-			//x 
-			TH1F *h1x = new TH1F("h1x","h1x",1000,0.1,0.7);
-			// phi
-			TH1F *h1phi = new TH1F("h1phi","h1phi",1000.,Phi_MIN,Phi_MAX);
-			//t 
-			TH1F *h1t = new TH1F("h1t","h1t",1000,0.1,0.7);
-			/*}}}*/
 
 			/*Fill and Save{{{*/
 			h1Q2->Reset();
@@ -297,7 +299,7 @@ int makebin(int target_flag, int Q2_flag, int x_flag){
 
 			double dilution = dilute_factor;//fix the value for now
 			double N_out = h1t->GetSum()*(pow(polarization * target_factor * dilution,2) * det_eff);
-			outf_total << i << " \t" << j << " \t" 
+			outf_L << i << " \t" << j << " \t" 
 				<< h1Q2->GetMean() << " \t" 
 				<< h1x->GetMean() << " \t" 
 				<< h1phi->GetMean() << " \t"
@@ -305,19 +307,158 @@ int makebin(int target_flag, int Q2_flag, int x_flag){
 				<< h1t->GetSum() << " \t"
 				<< N_out
 				<< endl;
-
-			h1Q2->Delete();
-			h1x->Delete();
-			h1phi->Delete();
-			h1t->Delete();
 			/*}}}*/
 		}
 		/*}}}*/
+		
+		/*t Binning on Tx{{{*/
+		cut1="(weight*Sigma_Tx)";
+		cut2.Form("(phi>=%f&&phi<%f)",phimin,phimax);
+		cut2 = cut1 + "*" + cut2;
+		cut = cut2;
+		h1->Reset();
+		T->Project("h1","t",cut);
 
-		h1->Delete();
-		h2->Delete();
+		/*Count How many t bins{{{*/
+		new_bin = 0, nevent_t=0;
+		t1[0] = T_MIN;
+
+		tb_max =0;
+		while(tb_max<1000){
+			new_bin++;
+			nevent_t = 0;
+
+			//	cerr<<Form("--- Start with t=%f, tb=%d",h1->GetBinCenter(tb_max),tb_max)<<endl;
+			//while(nevent_t < h1->GetSum()/tbin_fix&&tb_max<1000){
+			//while(nevent_t <=max(single_bin_raw,h1->GetSum()/6) &&tb_max<1000){
+			while(nevent_t <=h1->GetSum()/6 &&tb_max<1000){
+				nevent_t += h1->GetBinContent(tb_max++);
+			}
+			double tmax = h1->GetBinCenter(tb_max);
+
+			t1[new_bin] = tmax;
+			cerr<<Form("    #%d bin: t=%f, tb=%d, N=%e ", new_bin, tmax, tb_max, (double) nevent_t)<<endl;
+		}
+		tbin = new_bin;
+		/*}}}*/
+
+	//	if (tbin<1) xbin = 1; //Counts as one bin if the statistic is really low
+
+		outf_Tx << i << "\t" << tbin << endl;
+		cerr    << Form("--- Total t-bin in #%d phi bin is %d with N=%e .vs. %e" ,i,tbin,single_bin_raw, h1->GetSum()/100) << endl;
+		tmin = 0.0, tmax = 0.0;
+		for (Int_t j=0;j<tbin;j++){
+			tmin = t1[j];
+			tmax = t1[j+1];
+
+			/*Fill and Save{{{*/
+			h1Q2->Reset();
+			h1x->Reset();
+			h1phi->Reset();
+			h1t->Reset();
+
+			cut2.Form("(phi>=%f&&phi<%f&&t>=%f&&t<%f)",phimin,phimax,tmin,tmax);
+			cut2 = cut1 + "*" + cut2;
+			cut = cut2;
+
+			T->Project("h1Q2","Q2",cut);
+			T->Project("h1x","x",cut);
+			T->Project("h1phi","phi",cut);
+			T->Project("h1t","t",cut);
+
+			double dilution = dilute_factor;//fix the value for now
+			double N_out = h1t->GetSum()*(pow(polarization * target_factor * dilution,2) * det_eff);
+			outf_Tx << i << " \t" << j << " \t" 
+				<< h1Q2->GetMean() << " \t" 
+				<< h1x->GetMean() << " \t" 
+				<< h1phi->GetMean() << " \t"
+				<< h1t->GetMean() << " \t" 
+				<< h1t->GetSum() << " \t"
+				<< N_out
+				<< endl;
+			/*}}}*/
+		}
+		/*}}}*/
+		
+		/*t Binning on Ty{{{*/
+		cut1="(weight*Sigma_Ty)";
+		cut2.Form("(phi>=%f&&phi<%f)",phimin,phimax);
+		cut2 = cut1 + "*" + cut2;
+		cut = cut2;
+		h1->Reset();
+		T->Project("h1","t",cut);
+
+		/*Count How many t bins{{{*/
+		new_bin = 0, nevent_t=0;
+		t1[0] = T_MIN;
+
+		tb_max =0;
+		while(tb_max<1000){
+			new_bin++;
+			nevent_t = 0;
+
+			//	cerr<<Form("--- Start with t=%f, tb=%d",h1->GetBinCenter(tb_max),tb_max)<<endl;
+			//while(nevent_t < h1->GetSum()/tbin_fix&&tb_max<1000){
+			//while(nevent_t <=max(single_bin_raw,h1->GetSum()/6) &&tb_max<1000){
+			while(nevent_t <=h1->GetSum()/6 &&tb_max<1000){
+				nevent_t += h1->GetBinContent(tb_max++);
+			}
+			double tmax = h1->GetBinCenter(tb_max);
+
+			t1[new_bin] = tmax;
+			cerr<<Form("    #%d bin: t=%f, tb=%d, N=%e ", new_bin, tmax, tb_max, (double) nevent_t)<<endl;
+		}
+		tbin = new_bin;
+		/*}}}*/
+
+	//	if (tbin<1) xbin = 1; //Counts as one bin if the statistic is really low
+
+		outf_Ty << i << "\t" << tbin << endl;
+		cerr    << Form("--- Total t-bin in #%d phi bin is %d with N=%e .vs. %e" ,i,tbin,single_bin_raw, h1->GetSum()/100) << endl;
+		tmin = 0.0, tmax = 0.0;
+		for (Int_t j=0;j<tbin;j++){
+			tmin = t1[j];
+			tmax = t1[j+1];
+
+			/*Fill and Save{{{*/
+			h1Q2->Reset();
+			h1x->Reset();
+			h1phi->Reset();
+			h1t->Reset();
+
+			cut2.Form("(phi>=%f&&phi<%f&&t>=%f&&t<%f)",phimin,phimax,tmin,tmax);
+			cut2 = cut1 + "*" + cut2;
+			cut = cut2;
+
+			T->Project("h1Q2","Q2",cut);
+			T->Project("h1x","x",cut);
+			T->Project("h1phi","phi",cut);
+			T->Project("h1t","t",cut);
+
+			double dilution = dilute_factor;//fix the value for now
+			double N_out = h1t->GetSum()*(pow(polarization * target_factor * dilution,2) * det_eff);
+			outf_Ty << i << " \t" << j << " \t" 
+				<< h1Q2->GetMean() << " \t" 
+				<< h1x->GetMean() << " \t" 
+				<< h1phi->GetMean() << " \t"
+				<< h1t->GetMean() << " \t" 
+				<< h1t->GetSum() << " \t"
+				<< N_out
+				<< endl;
+			/*}}}*/
+		}
+		/*}}}*/
 	}
-	outf_total.close();
+
+	h1->Delete();
+	h1Q2->Delete();
+	h1x->Delete();
+	h1phi->Delete();
+	h1t->Delete();
+	outf_L.close();
+	outf_Tx.close();
+	outf_Ty.close();
+
 	return 0;
 }
 

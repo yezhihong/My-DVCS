@@ -4,7 +4,7 @@ $VGG_CMD = "$WORK_DIR/env_ld.sh";
 $run_number = $ARGV[0];
 $split = $ARGV[1];
 $Mn =0.939565378;
-$Energy = 11.;
+$Energy = 8.8;
 $E0 = int($Energy);
 $Q2_Min = 1;
 $Q2_Max = 9;
@@ -23,8 +23,8 @@ $phi_Max = 360.;
 $phi_Step = 15.;
 #$phi_Bin = ($phi_Max - $phi_Min)/$phi_Step;
 
-$TargetPol = 3; #1->Tx, 2->Ty, 3->Long
-$TP = "L";
+$TargetPol = 2; #1->Tx, 2->Ty, 3->Long
+$TP = "Ty";
 $DATA_DIR = "$WORK_DIR/Neutron_$E0";
 #########################################################################3
 system("echo $WORK_DIR");
@@ -36,7 +36,7 @@ for ( $iQ2=0;$iQ2<$Q2_Bin;$iQ2++){#from 1.0 upto 10.0
 
 		$Kp = $Energy -($Q2/(2.*$Mn*$xb));
 		$nu = $Energy-$Kp;
-
+        
 		$tmax = ($Q2*$Mn+2.*$Mn*$nu*($nu+sqrt($nu*$nu+$Q2))) / (-sqrt($nu*$nu+$Q2)-$nu-$Mn);
 		$tmax = -1*$tmax;
 		if ($tmax < $t_Max) {
@@ -45,7 +45,7 @@ for ( $iQ2=0;$iQ2<$Q2_Bin;$iQ2++){#from 1.0 upto 10.0
 
 		##This definition is the same as the other one but I prefer to use that one
 		#$tmin = -$Q2-($Q2*(1.-$xb)*($nu-sqrt($Q2+$nu*$nu))/($xb*($Mn+$nu-sqrt($Q2+$nu*$nu))));
-
+	
 		$tmin = ($Q2*$Mn+2.*$Mn*$nu*($nu-sqrt($nu*$nu+$Q2))) / (sqrt($nu*$nu+$Q2)-$nu-$Mn);
 		$tmin = $tmin+0.02*$tmin;
 		$tmin = int(1000*$tmin)/1000;
@@ -55,11 +55,11 @@ for ( $iQ2=0;$iQ2<$Q2_Bin;$iQ2++){#from 1.0 upto 10.0
 
 		$t=-1.*$tmin;
 #		for ($it=0;$it<20;$it++){#upto <62 before
-		$it=0;
-		while ($t<=$t_Max){
+        $it=0;
+	    while ($t<=$t_Max){
 
-#			$filename = "$WORK_DIR/inputs_np/E$E0-$TP-Q2-$iQ2-xb-$ixb-t-$it";
-#			unless (-e $filename) {
+			#$filename = "$WORK_DIR/inputs_np/E$E0-$TP-Q2-$iQ2-xb-$ixb-t-$it";
+			#unless (-e $filename) {
 			$datafilename = "$DATA_DIR/E$E0-$TP-Q2-$iQ2-xb-$ixb-t-$it.dat";
 			unless (-e $datafilename) {
 				#unless (0) {

@@ -29,9 +29,9 @@ $DATA_DIR = "$WORK_DIR/Neutron_$E0";
 #########################################################################3
 system("echo $WORK_DIR");
 
-for ( $iQ2=1;$iQ2<$Q2_Bin;$iQ2++){#from 1.0 upto 10.0
+for ( $iQ2=0;$iQ2<$Q2_Bin;$iQ2++){#from 1.0 upto 10.0
 	$Q2 = $Q2_Min+$iQ2 * $Q2_Step;
-	for ( $ixb=1;$ixb<$xb_Bin;$ixb++){#from 0.1 upto 0.9
+	for ( $ixb=0;$ixb<$xb_Bin;$ixb++){#from 0.1 upto 0.9
 		$xb = $xb_Min+$ixb * $xb_Step;
 
 		$Kp = $Energy -($Q2/(2.*$Mn*$xb));
@@ -58,9 +58,10 @@ for ( $iQ2=1;$iQ2<$Q2_Bin;$iQ2++){#from 1.0 upto 10.0
         $it=0;
 	    while ($t<=$t_Max){
 
-			$filename = "$WORK_DIR/inputs_np/E$E0-$TP-Q2-$iQ2-xb-$ixb-t-$it";
-			#unless (-e $filename) {
-			unless (0) {
+#			$filename = "$WORK_DIR/inputs_np/E$E0-$TP-Q2-$iQ2-xb-$ixb-t-$it";
+#			unless (-e $filename) {
+			$datafilename = "$DATA_DIR/E$E0-$TP-Q2-$iQ2-xb-$ixb-t-$it.dat";
+			unless (-e $datafilename) {
 				open(ENV_FILE,"> $filename");#_$ARGV[0]_$ARGV[1]_$ARGV[2]");
 
 #Choose one of the following menu items :
@@ -237,7 +238,7 @@ for ( $iQ2=1;$iQ2<$Q2_Bin;$iQ2++){#from 1.0 upto 10.0
 				close(OUT_FILE);
 
 				system("echo jsub $script_name");
-				#system("/site/bin/jsub $script_name");
+				system("/site/bin/jsub $script_name");
 			}
 
 			$t = $t+$t_Step;
@@ -245,5 +246,6 @@ for ( $iQ2=1;$iQ2<$Q2_Bin;$iQ2++){#from 1.0 upto 10.0
 			$it = $it + 1;
 		}
 	}
+#}
 }
 

@@ -66,11 +66,15 @@ Int_t CheckLawsPi0(TLorentzVector* P_t,TLorentzVector* P_E0, TLorentzVector* P_e
 Double_t GetMM( TLorentzVector* P_t,TLorentzVector* P_E0, TLorentzVector* P_e, TLorentzVector* P_g);
 Double_t GetPi0MM(TLorentzVector* P_t,TLorentzVector* P_E0, TLorentzVector* P_e, TLorentzVector* P_g);
 
-int add_branch(TString particle,int energy_flag){
-	gStyle->SetOptStat(1);
-	const double Lumi = 1.0e36; // cm-2*s-1, for He3 nuclear not for nucleons
-	const double KHz = 1e-3;
-	const double nBcm2 = 1e-33;
+//int add_branch(TString particle,int energy_flag){
+int main(){
+	TString particle; cerr<<"--- Particle (n or p)"; cin>>particle;
+	Int_t energy_flag; cerr<<"--- Energy Flag (11 or 8)"; cin>>energy_flag;
+
+    gStyle->SetOptStat(1);
+	//const double Lumi = 1.0e36; // cm-2*s-1, for He3 nuclear not for nucleons
+	//const double KHz = 1e-3;
+	//const double nBcm2 = 1e-33;
 	double hMass = 0.0;
 	TString Target = "";
 	TString Energy = "";
@@ -115,12 +119,13 @@ int add_branch(TString particle,int energy_flag){
 	TLorentzVector *P_g_res = new TLorentzVector();//photon with resolution
 
 	Double_t vertexz, E0; 
-	Double_t ePx_ini, ePy_ini, ePz_ini, hPx_ini, hPy_ini,hPz_ini;
+	Double_t ePx_ini, ePy_ini, ePz_ini; 
+	//Double_t hP_ini, hPx_ini, hPy_ini,hPz_ini,hTheta_ini,hPhi_ini;
 	Double_t ePx, ePy, ePz, gPx, gPy, gPz, hPx, hPy, hPz;
-	Double_t eP_ini,hP_ini, eP, gP,hP;
+	Double_t eP_ini,eP, gP,hP;
 	Double_t Q2, x, t, phi, XS_P, XS_M,PSF;
-	Double_t ePhi_ini,hPhi_ini, ePhi, gPhi,hPhi;
-	Double_t eTheta_ini,hTheta_ini, eTheta, gTheta,hTheta;
+	Double_t ePhi_ini, ePhi, gPhi,hPhi;
+	Double_t eTheta_ini, eTheta, gTheta,hTheta;
 	Int_t Ngen,Nacc;
 
 	//Define new measured quantities that include detector resolutions
@@ -273,11 +278,10 @@ int add_branch(TString particle,int energy_flag){
 			   */
 			/*}}}*/
 
-			double e_acceptance = e_acc_f+e_acc_l;
-			double g_acceptance = g_acc_f+g_acc_l;
-			double eg_acceptance = e_acceptance*g_acceptance;
-
-			double event_weight=(XS_P+XS_M)*PSF/N_gen*Lumi*nBcm2;   //put into Hz, Note, XS in nb
+		//	double e_acceptance = e_acc_f+e_acc_l;
+		//	double g_acceptance = g_acc_f+g_acc_l;
+		//	double eg_acceptance = e_acceptance*g_acceptance;
+			//double event_weight=(XS_P+XS_M)*PSF/N_gen*Lumi*nBcm2;   //put into Hz, Note, XS in nb
 
 			/*Missing Mass w/o resolutions{{{*/
 			eE_i = sqrt(eP_ini*eP_ini + eMass*eMass);
@@ -392,7 +396,7 @@ int add_branch(TString particle,int energy_flag){
 
 	T->Write("",TObject::kOverwrite);
 	file->Close();
-	delete P_g, P_t, P_e_i, P_e_f, P_h, P_e_res, P_g_res;
+	delete P_g; delete P_t; delete P_e_i; delete P_e_f; delete P_h; delete P_e_res; delete P_g_res;
 }
 
 /*Double_t GetMM(TLorentzVector* P_E0, TLorentzVector* P_e, TLorentzVector* P_g){{{*/
