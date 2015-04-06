@@ -76,9 +76,9 @@ int main(){
 		Double_t XS_MP = grid->GetSigmaMP();//-+
 		Double_t XS_MM = grid->GetSigmaMM();//--
 		Double_t XS = grid->GetSigma();//average of four XSs above
-		Double_t XS_BS = grid->GetSigmaBS();//beam spin asym
-		Double_t XS_TS = grid->GetSigmaTS();//target spin asym
-		Double_t XS_DS = grid->GetSigmaDS();//double spin asym
+		Double_t XS_BS = grid->GetBSA();//beam spin asym
+		Double_t XS_TS = grid->GetTSA();//target spin asym
+		Double_t XS_DS = grid->GetDSA();//double spin asym
 	}
 
 	delete grid;

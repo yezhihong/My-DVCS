@@ -47,6 +47,8 @@ class DVCSGrid{
 			fTablesDir = "/work/halla/solid/yez/dvcs/VGG/";
 
 			fMass_Neutron = 0.939565378;
+			fMass_Proton  = 0.938272046;
+			fMass = fMass_Neutron;
 
 			fDebug = -1;//
 		}
@@ -65,6 +67,15 @@ class DVCSGrid{
 			fTarget = kTarget;
 			fTablesDir = kTablesDir;
 			fDebug = kDebug;
+
+			if(fTarget=="Neutron")
+				fMass = fMass_Neutron;
+			else if(fTarget=="Proton")
+				fMass = fMass_Proton;
+			else{
+				cerr<<"***ERROR, the target is neither Neutron or Proton!!!"<<endl;
+
+			}
 		}
 
 		void SetEnergy(const Double_t kE0){
@@ -73,6 +84,14 @@ class DVCSGrid{
 
 		void SetTarget(const TString& kTarget){
 			fTarget = kTarget;
+			if(fTarget=="Neutron")
+				fMass = fMass_Neutron;
+			else if(fTarget=="Proton")
+				fMass = fMass_Proton;
+			else{
+				cerr<<"***ERROR, the target is neither Neutron or Proton!!!"<<endl;
+
+			}
 		}
 
 		void SetTablesDir(const TString& kTablesDir){
@@ -119,10 +138,10 @@ class DVCSGrid{
 			fQ2_Bin = (int)( (fQ2 - fQ2_Min) / fQ2_Step );
 			fXb_Bin = (int)( (fXb - fXb_Min) / fXb_Step );
 
-			Double_t fEp = fE0 -(fQ2/(2.*fMass_Neutron*fXb));
+			Double_t fEp = fE0 -(fQ2/(2.*fMass*fXb));
 			Double_t fNu = fE0-fEp;
-			//Double_t tmin = -fQ2-(fQ2*(1.-fXb)*(fNu-sqrt(fQ2+fNu*fNu))/(fXb*(fMass_Neutron+fNu-sqrt(fQ2+fNu*fNu))));
-			Double_t tmin = (fQ2*fMass_Neutron + 2.0*fMass_Neutron*fNu*(fNu-sqrt(fNu*fNu+fQ2))) / (sqrt(fNu*fNu+fQ2)-fNu-fMass_Neutron);
+			//Double_t tmin = -fQ2-(fQ2*(1.-fXb)*(fNu-sqrt(fQ2+fNu*fNu))/(fXb*(fMass+fNu-sqrt(fQ2+fNu*fNu))));
+			Double_t tmin = (fQ2*fMass + 2.0*fMass*fNu*(fNu-sqrt(fNu*fNu+fQ2))) / (sqrt(fNu*fNu+fQ2)-fNu-fMass);
 			cerr<<"--- T-Min = "<<tmin<<endl;
 			tmin = tmin+0.02*tmin;
 			tmin = int(1000*tmin)/1000.0;
@@ -151,10 +170,10 @@ class DVCSGrid{
 		/*Load XS{{{*/
 		Int_t LoadXS(const TString& kTargetPol){
 			TString filename = "";
-			Double_t kXS_PP0=-1000.0,kXS_PM0=-1000.0, kXS_MP0=-1000.0, kXS_MM0=-1000.0, kXS0=-1000.0;
-			Double_t kXS_PP1=-1000.0,kXS_PM1=-1000.0, kXS_MP1=-1000.0, kXS_MM1=-1000.0, kXS1=-1000.0;
-			Double_t kXS_PP2=-1000.0,kXS_PM2=-1000.0, kXS_MP2=-1000.0, kXS_MM2=-1000.0, kXS2=-1000.0;
-			Double_t kXS_PP3=-1000.0,kXS_PM3=-1000.0, kXS_MP3=-1000.0, kXS_MM3=-1000.0, kXS3=-1000.0;
+			Double_t kXS_PP0=1e-36,kXS_PM0=1e-36, kXS_MP0=1e-36, kXS_MM0=1e-36, kXS0=1e-36;
+			Double_t kXS_PP1=1e-36,kXS_PM1=1e-36, kXS_MP1=1e-36, kXS_MM1=1e-36, kXS1=1e-36;
+			Double_t kXS_PP2=1e-36,kXS_PM2=1e-36, kXS_MP2=1e-36, kXS_MM2=1e-36, kXS2=1e-36;
+			Double_t kXS_PP3=1e-36,kXS_PM3=1e-36, kXS_MP3=1e-36, kXS_MM3=1e-36, kXS3=1e-36;
 
 			Double_t kQ2_low =  fQ2_Min + fQ2_Bin*fQ2_Step;
 			Double_t kQ2_high = kQ2_low + fQ2_Step;
@@ -224,7 +243,7 @@ class DVCSGrid{
 								kXS_PP0, kXS_PM0, kXS_MP0, kXS_MM0, kXS0)<<endl;	
 					}
 					if(isnan(kXS0)||isnan(kXS_PP0)||isnan(kXS_PM0)||isnan(kXS_MP0)||isnan(kXS_MM0)){
-						kXS0=-999; kXS_PP0=-999; kXS_PM0=-999; kXS_MP0=-999; kXS_MM0=-999;
+						kXS0=1e-33; kXS_PP0=1e-33; kXS_PM0=1e-33; kXS_MP0=1e-33; kXS_MM0=1e-33;
 					}
 
 					break;
@@ -272,7 +291,7 @@ class DVCSGrid{
 									kXS_PP1, kXS_PM1, kXS_MP1, kXS_MM1, kXS1)<<endl;	
 						}
 						if(isnan(kXS1)||isnan(kXS_PP1)||isnan(kXS_PM1)||isnan(kXS_MP1)||isnan(kXS_MM1)){
-							kXS1=-999; kXS_PP1=-999; kXS_PM1=-999; kXS_MP1=-999; kXS_MM1=-999;
+							kXS1=1e-33; kXS_PP1=1e-33; kXS_PM1=1e-33; kXS_MP1=1e-33; kXS_MM1=1e-33;
 						}
 						break;
 					}
@@ -320,7 +339,7 @@ class DVCSGrid{
 										kXS_PP2, kXS_PM2, kXS_MP2, kXS_MM2, kXS2)<<endl;	
 							}
 							if(isnan(kXS2)||isnan(kXS_PP2)||isnan(kXS_PM2)||isnan(kXS_MP2)||isnan(kXS_MM2)){
-								kXS2=-999; kXS_PP2=-999; kXS_PM2=-999; kXS_MP2=-999; kXS_MM2=-999;
+								kXS2=1e-33; kXS_PP2=1e-33; kXS_PM2=1e-33; kXS_MP2=1e-33; kXS_MM2=1e-33;
 							}
 							break;
 						}
@@ -368,7 +387,7 @@ class DVCSGrid{
 											kXS_PP3, kXS_PM3, kXS_MP3, kXS_MM3, kXS3)<<endl;	
 								}
 								if(isnan(kXS3)||isnan(kXS_PP3)||isnan(kXS_PM3)||isnan(kXS_MP3)||isnan(kXS_MM3)){
-									kXS3=-999; kXS_PP3=-999; kXS_PM3=-999; kXS_MP3=-999; kXS_MM3=-999;
+									kXS3=1e-33; kXS_PP3=1e-33; kXS_PM3=1e-33; kXS_MP3=1e-33; kXS_MM3=1e-33;
 								}
 								break;
 							}
@@ -441,8 +460,10 @@ class DVCSGrid{
 			Double_t A = y2 - y1;
 			Double_t B = (x - x1) / (x2-x1);
 			Double_t y = A*B + y1;
-			if(isnan(y))
+			if(isnan(y)){
 				cerr<<Form("*** ERROR, x=%8.4e, x1=%8.4e, x2=%8.4e, y1=%8.4e, y2=%8.4e, y=%8.4e", x, x1, x2, y1, y2, y)<<endl;
+				y = 1e-30;
+			}
 			return y/y1;//return the correction for y1, not y itself
 		}
 		/*Load and Fine XS}}}*/
@@ -513,6 +534,8 @@ class DVCSGrid{
 		/*variables{{{*/
 		Double_t fE0; //incoming beam energy, 11GeV or 8.8 GeV, GeV
 		Double_t fMass_Neutron; //should be a constant but I still initialize it
+		Double_t fMass_Proton; //should be a constant but I still initialize it
+		Double_t fMass; //should be a constant but I still initialize it
 		Double_t fQ2; //GeV2
 		Double_t fXb;
 		Double_t fT; //GeV2
