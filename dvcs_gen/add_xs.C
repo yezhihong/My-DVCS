@@ -48,7 +48,7 @@
 #include "LHAPDF/LHAPDF.h"
 //#include <TMatrix.h>
 /*}}}*/
-#include "/work/halla/solid/yez/dvcs/VGG/GetXS/DVCSGrid.h"
+#include "/work/halla/solid/yez/dvcs/DVCS_XS_Grid/GetXS/DVCSGrid.h"
 using namespace std;
 const double DEG = 180./3.1415926;
 const double PI = 3.1415926;
@@ -60,24 +60,20 @@ Int_t main(Int_t argc, char *argv[]){
     TString Target = "";
 	if(particle=="n")
 		Target= "Neutron";
-	if(particle=="n")
+	if(particle=="p")
 		Target= "Proton";
 
 	/*DVCS: Define Rootfile and variables{{{*/
 	TString filename = "";
-	if(particle=="p"){
-		if(fabs(EBeam-11)<1.0)
-			filename = "./Proton_11GeV.root";
-		else if(fabs(EBeam-8.8)<1.)
-			filename = "./Proton_8.8GeV.root";
-	}else if(particle=="n"){
-		if(fabs(EBeam-11)<1.0)
-			filename = "./Neutron_11GeV.root";
-		else if(fabs(EBeam-8.8)<1.)
-			filename = "./Neutron_8.8GeV.root";
-	}
+	if(fabs(EBeam-11)<1.0)
+		filename = Form("./%s_11GeV.root",Target.Data());
+	else if(fabs(EBeam-8.8)<1.)
+		filename = Form("./%s_8.8GeV.root",Target.Data());
+
+	cerr<<Form("--- Reading root file %s", filename.Data())<<endl;
+
 	TFile *file = new TFile(filename.Data(), "update");
-    TTree *T = (TTree*) file->Get("T");
+	TTree *T = (TTree*) file->Get("T");
 
 	Double_t vertexz, E0; 
 	Double_t ePx_ini, ePy_ini, ePz_ini;
@@ -162,12 +158,14 @@ Int_t main(Int_t argc, char *argv[]){
 	/*}}}*/
 
 	/*Add new branches{{{*/
-	Double_t BSA_L, TSA_L, DSA_L;
+	Double_t tmin, BSA_L, TSA_L, DSA_L;
 	Double_t Sigma_L, SigmaPP_L,SigmaPM_L, SigmaMP_L, SigmaMM_L;
 	Double_t BSA_Tx, TSA_Tx, DSA_Tx;
 	Double_t Sigma_Tx, SigmaPP_Tx,SigmaPM_Tx, SigmaMP_Tx, SigmaMM_Tx;
 	Double_t BSA_Ty, TSA_Ty, DSA_Ty;
 	Double_t Sigma_Ty, SigmaPP_Ty,SigmaPM_Ty, SigmaMP_Ty, SigmaMM_Ty;
+	
+	TBranch *br_tmin     = T->Branch("tmin",     &tmin,     "tmin/D");
 			
 	TBranch *br_Sigma_L   = T->Branch("Sigma_L",   &Sigma_L,   "Sigma_L/D");
 	TBranch *br_SigmaPP_L = T->Branch("SigmaPP_L", &SigmaPP_L, "SigmaPP_L/D");
@@ -196,7 +194,7 @@ Int_t main(Int_t argc, char *argv[]){
 	TBranch *br_TSA_Ty     = T->Branch("TSA_Ty",     &TSA_Ty,     "TSA_Ty/D");
 	TBranch *br_DSA_Ty     = T->Branch("DSA_Ty",     &DSA_Ty,     "DSA_Ty/D");
 	/*}}}*/ 
-    TString Data_Dir = "/work/halla/solid/yez/dvcs/VGG/";
+    TString Data_Dir = "/work/halla/solid/yez/dvcs/DVCS_XS_Grid/";
 	TString TargetPol = ""; //Tx, Ty, L 
 	Int_t Debug = 0, err = 0;
 
@@ -204,14 +202,18 @@ Int_t main(Int_t argc, char *argv[]){
     grid->Init(EBeam, Target.Data(), Data_Dir.Data(), Debug);
 
 	for(int i=0;i<N_entries;i++){
+		if(!(i%1000)) cerr<<Form("--- Processing #event = %d/%d", i,(int)(N_entries) ) <<"\r";
 		T->GetEntry(i);
 
-		grid->FindBin(Q2, x, -t, phi);// here -t was used instead of t
+		grid->FindBin(Q2, x, -t, phi*DEG);// here -t was used instead of t
 		//grid->PrintRanges();
+	    
+		tmin = grid->GetTMin();	
+		br_tmin->Fill();
 
-	    /*Reading the Longitudinal Target Spin{{{*/	
-   		SigmaPP_L = -1000; SigmaPM_L = -1000;  SigmaMP_L = -1000;  SigmaMM_L = -1000; 
-		Sigma_L = -1000;   BSA_L = -1000; TSA_L = -1000; DSA_L = -1000;
+	    /*Reading the Longitudinal Target Spin{{{*/
+   		SigmaPP_L = 1e-36; SigmaPM_L = 1e-36;  SigmaMP_L = 1e-36;  SigmaMM_L = 1e-36; 
+		Sigma_L = 1e-36;   BSA_L = 1e-36; TSA_L = 1e-36; DSA_L = 1e-36;
 		TargetPol = "L";
 		err = grid->LoadXS(TargetPol);
 		 if(err>=0){
@@ -230,8 +232,8 @@ Int_t main(Int_t argc, char *argv[]){
 	    /*Reading the Longitudinal Target Spin}}}*/	
 	
 	    /*Reading the Transverse Target Spin on x{{{*/	
-   		SigmaPP_Tx = -1000;SigmaPM_Tx = -1000; SigmaMP_Tx = -1000; SigmaMM_Tx = -1000; 
-		Sigma_Tx = -1000;  BSA_Tx = -1000;TSA_Tx = -1000;DSA_Tx = -1000;
+   		SigmaPP_Tx = 1e-36;SigmaPM_Tx = 1e-36; SigmaMP_Tx = 1e-36; SigmaMM_Tx = 1e-36; 
+		Sigma_Tx = 1e-36;  BSA_Tx = 1e-36;TSA_Tx = 1e-36;DSA_Tx = 1e-36;
 		TargetPol = "Tx";
 		err = grid->LoadXS(TargetPol);
 		if(err>=0){
@@ -250,8 +252,8 @@ Int_t main(Int_t argc, char *argv[]){
 	    /*Reading the Transverse Target Spin on x}}}*/	
 	
 	    /*Reading the Transverse Target Spin on y{{{*/	
-		SigmaPP_Ty = -1000;SigmaPM_Ty = -1000; SigmaMP_Ty = -1000; SigmaMM_Ty = -1000; 
-		Sigma_Ty = -1000;  BSA_Ty = -1000;TSA_Ty = -1000;DSA_Ty = -1000;
+		SigmaPP_Ty = 1e-36;SigmaPM_Ty = 1e-36; SigmaMP_Ty = 1e-36; SigmaMM_Ty = 1e-36; 
+		Sigma_Ty = 1e-36;  BSA_Ty = 1e-36;TSA_Ty = 1e-36;DSA_Ty = 1e-36;
 
         TargetPol = "Ty";
 		err = grid->LoadXS(TargetPol);
@@ -270,7 +272,17 @@ Int_t main(Int_t argc, char *argv[]){
 		br_Sigma_Ty->Fill();   br_BSA_Ty->Fill(); br_TSA_Ty->Fill(); br_DSA_Ty->Fill();
 	    /*Reading the Transverse Target Spin on y}}}*/	
 	}
-	
+
+	br_tmin->Write();
+	br_SigmaPP_L->Write(); br_SigmaPM_L->Write(); br_SigmaMP_L->Write(); br_SigmaMM_L->Write();
+	br_Sigma_L->Write();   br_BSA_L->Write(); br_TSA_L->Write(); br_DSA_L->Write();
+
+	br_SigmaPP_Tx->Write(); br_SigmaPM_Tx->Write(); br_SigmaMP_Tx->Write(); br_SigmaMM_Tx->Write();
+	br_Sigma_Tx->Write();   br_BSA_Tx->Write(); br_TSA_Tx->Write(); br_DSA_Tx->Write();
+
+	br_SigmaPP_Ty->Write(); br_SigmaPM_Ty->Write(); br_SigmaMP_Ty->Write(); br_SigmaMM_Ty->Write();
+	br_Sigma_Ty->Write();   br_BSA_Ty->Write(); br_TSA_Ty->Write(); br_DSA_Ty->Write();
+
 	T->Write("",TObject::kOverwrite);
     file->Close();
 

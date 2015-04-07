@@ -48,6 +48,7 @@
 #include "LHAPDF/LHAPDF.h"
 //#include <TMatrix.h>
 /*}}}*/
+#include "/work/halla/solid/yez/dvcs/DVCS_XS_Grid/GetXS/DVCSGrid.h"
 
 using namespace std;
 const double DEG = 180./3.1415926;
@@ -56,7 +57,6 @@ const double PI = 3.1415926;
 //Here bin on Q2 and x first, and the t and phi binning will be in the next step
 Int_t main(Int_t argc, char *argv[]){
 	TString particle = "X"; cerr<<"-- What particle (p->proton, n->neutron)? "; cin >> particle;
-	TString energy = "X"; cerr<<"-- What energy (11, 8 or 11p8)? "; cin >> energy;
     TString Target = "";
 	if(particle=="n")
 		Target= "3he";
@@ -66,24 +66,11 @@ Int_t main(Int_t argc, char *argv[]){
 	/*DVCS: Define Rootfile and variables{{{*/
 	TChain *T = new TChain("T");
 	if(particle=="p"){
-		if(energy=="8")
-			T->Add("./Proton_8.8GeV.root");
-		else if(energy=="11")
-			T->Add("./Proton_11GeV.root");
-		else if(energy=="11p8"){
-			T->Add("./Proton_8.8GeV.root");
-			T->Add("./Proton_11GeV.root");
-
-		}
+			T->Add("../Proton_8.8GeV.root");
+			T->Add("../Proton_11GeV.root");
 	}else if(particle=="n"){
-		if(energy=="8")
-			T->Add("./Neutron_8.8GeV.root");
-		else if(energy=="11")
-			T->Add("./Neutron_11GeV.root");
-		else if(energy=="11p8"){
-			T->Add("./Neutron_11GeV.root");
-			T->Add("./Neutron_8.8GeV.root");
-		}
+			T->Add("../Neutron_11GeV.root");
+			T->Add("../Neutron_8.8GeV.root");
 	}
 
 	Double_t vertexz, E0; 
@@ -165,41 +152,21 @@ Int_t main(Int_t argc, char *argv[]){
 	Double_t SigmaPP_L, SigmaPM_L, SigmaMP_L, SigmaMM_L, Sigma_L, BSA_L, TSA_L, DSA_L;
 	Double_t SigmaPP_Tx, SigmaPM_Tx, SigmaMP_Tx, SigmaMM_Tx, Sigma_Tx, BSA_Tx, TSA_Tx, DSA_Tx;
 	Double_t SigmaPP_Ty, SigmaPM_Ty, SigmaMP_Ty, SigmaMM_Ty, Sigma_Ty, BSA_Ty, TSA_Ty, DSA_Ty;
-
-	T->SetBranchAddress("SigmaPP_L", &SigmaPP_L);
-	T->SetBranchAddress("SigmaPM_L", &SigmaPM_L);
-	T->SetBranchAddress("SigmaMP_L", &SigmaMP_L);
-	T->SetBranchAddress("SigmaMM_L", &SigmaMM_L);
-	T->SetBranchAddress("Sigma_L", &Sigma_L);
-	T->SetBranchAddress("BSA_L", &BSA_L);
-	T->SetBranchAddress("TSA_L", &TSA_L);
-	T->SetBranchAddress("DSA_L", &DSA_L);
-
-	T->SetBranchAddress("SigmaPP_Tx", &SigmaPP_Tx);
-	T->SetBranchAddress("SigmaPM_Tx", &SigmaPM_Tx);
-	T->SetBranchAddress("SigmaMP_Tx", &SigmaMP_Tx);
-	T->SetBranchAddress("SigmaMM_Tx", &SigmaMM_Tx);
-	T->SetBranchAddress("Sigma_Tx", &Sigma_Tx);
-	T->SetBranchAddress("BSA_Tx", &BSA_Tx);
-	T->SetBranchAddress("TSA_Tx", &TSA_Tx);
-	T->SetBranchAddress("DSA_Tx", &DSA_Tx);
-
-	T->SetBranchAddress("SigmaPP_Ty", &SigmaPP_Ty);
-	T->SetBranchAddress("SigmaPM_Ty", &SigmaPM_Ty);
-	T->SetBranchAddress("SigmaMP_Ty", &SigmaMP_Ty);
-	T->SetBranchAddress("SigmaMM_Ty", &SigmaMM_Ty);
-	T->SetBranchAddress("Sigma_Ty", &Sigma_Ty);
-	T->SetBranchAddress("BSA_Ty", &BSA_Ty);
-	T->SetBranchAddress("TSA_Ty", &TSA_Ty);
-	T->SetBranchAddress("DSA_Ty", &DSA_Ty);
+    Double_t tmin;
 
 	Long64_t N_entries=T->GetEntries();
 	T->GetEntry(0);
 	Long64_t N_gen = Ngen*2;//11GeV and 8.8 GeV settings should have the same total generated events but please check
 	cout<<"DVCS: total generated events number: "<<N_gen<<"--- and accepted: "<<N_entries<<endl;
 	/*}}}*/
+
+    TString Data_Dir = "/work/halla/solid/yez/dvcs/DVCS_XS_Grid/";
+	TString TargetPol = ""; //Tx, Ty, L 
+	Int_t Debug = 0, err = 0;
+
+	DVCSGrid *grid = new DVCSGrid();
 	
-	TString prefix = Form("./skim_rootfiles_%s/", energy.Data());
+	TString prefix = "./new_skim_rootfiles_11p8/";
 	const int Day_11 = 48;//for 11GeV SIDIS run
 	const int Day_8 = 21;//for 8.8GeV SIDIS run
 	const double Lumi = 1.0e36; // cm-2*s-1, for He3 nuclear not for nucleons
@@ -218,9 +185,9 @@ Int_t main(Int_t argc, char *argv[]){
 
 	Double_t weight = 0.0, time=0.0;
 	for(int i=0;i<Q2_bin;i++){
+		Double_t Q2min = Q2_cut[i];
+		Double_t Q2max = Q2_cut[i+1];
 		for(int j=0;j<x_bin;j++){
-			Double_t Q2min = Q2_cut[i];
-			Double_t Q2max = Q2_cut[i+1];
 			Double_t xmin = x_cut[j];
 			Double_t xmax = x_cut[j+1];
 
@@ -229,7 +196,7 @@ Int_t main(Int_t argc, char *argv[]){
 
 			/*Define new rootfile{{{*/
 
-			TString finalfile = Form("%s/%s_%d_%d_%s.root", prefix.Data(), particle.Data(), i,j, energy.Data());
+			TString finalfile = Form("%s/%s_%d_%d_11p8.root", prefix.Data(), particle.Data(), i,j);
 
 			TFile *file = new TFile(finalfile.Data(),"recreate");
 			TTree *t1 = new TTree("T","A new tree");
@@ -292,7 +259,7 @@ Int_t main(Int_t argc, char *argv[]){
 			t1->Branch("gPz_res",   &gPz_res,   "gPz_res/D");
 			t1->Branch("gTheta_res",&gTheta_res,"gTheta_res/D");
 			t1->Branch("gPhi_res",  &gPhi_res,  "gPhi_res/D");
-			
+
 			t1->Branch("e_acc_f", &e_acc_f, "e_acc_f/D");
 			t1->Branch("e_acc_l", &e_acc_l, "e_acc_l/D");
 			t1->Branch("g_acc_f", &g_acc_f, "g_acc_f/D");
@@ -300,6 +267,7 @@ Int_t main(Int_t argc, char *argv[]){
 			t1->Branch("weight", &weight, "weight/D");
 			t1->Branch("time", &time, "time/D");
 
+			t1->Branch("tmin", &tmin, "tmin/D");
 			t1->Branch("SigmaPP_L", &SigmaPP_L, "SigmaPP_L/D");
 			t1->Branch("SigmaPM_L", &SigmaPM_L, "SigmaPM_L/D");
 			t1->Branch("SigmaMP_L", &SigmaMP_L, "SigmaMP_L/D");
@@ -331,8 +299,70 @@ Int_t main(Int_t argc, char *argv[]){
 
 			for (Int_t k=0;k<T->GetEntries();k++){
 				T->GetEntry(k);
-
+				
 				if (x>=xmin&&x<xmax&&Q2>=Q2min&&Q2<Q2max&&W>2){
+    
+					grid->Init(E0, "Neutron", Data_Dir.Data(), Debug);
+					grid->FindBin(Q2, x, -t, phi*DEG);// here -t was used instead of t
+					//grid->PrintRanges();
+
+					tmin = grid->GetTMin();	
+
+					/*Reading the Longitudinal Target Spin{{{*/
+					SigmaPP_L = 1e-36; SigmaPM_L = 1e-36;  SigmaMP_L = 1e-36;  SigmaMM_L = 1e-36; 
+					Sigma_L = 1e-36;   BSA_L = 1e-36; TSA_L = 1e-36; DSA_L = 1e-36;
+					TargetPol = "L";
+					err = grid->LoadXS(TargetPol);
+					if(err>=0){
+						//grid->PrintXS();
+						SigmaPP_L = grid->GetSigmaPP();//++
+						SigmaPM_L = grid->GetSigmaPM();//+-
+						SigmaMP_L = grid->GetSigmaMP();//-+
+						SigmaMM_L = grid->GetSigmaMM();//--
+						Sigma_L = grid->GetSigma();//average of four XSs above
+						BSA_L = grid->GetBSA();//beam spin asym
+						TSA_L = grid->GetTSA();//target spin asym
+						DSA_L = grid->GetDSA();//double spin asym
+					}
+					/*Reading the Longitudinal Target Spin}}}*/	
+
+					/*Reading the Transverse Target Spin on x{{{*/	
+					SigmaPP_Tx = 1e-36;SigmaPM_Tx = 1e-36; SigmaMP_Tx = 1e-36; SigmaMM_Tx = 1e-36; 
+					Sigma_Tx = 1e-36;  BSA_Tx = 1e-36;TSA_Tx = 1e-36;DSA_Tx = 1e-36;
+					TargetPol = "Tx";
+					err = grid->LoadXS(TargetPol);
+					if(err>=0){
+						//grid->PrintXS();
+						SigmaPP_Tx = grid->GetSigmaPP();//++
+						SigmaPM_Tx = grid->GetSigmaPM();//+-
+						SigmaMP_Tx = grid->GetSigmaMP();//-+
+						SigmaMM_Tx = grid->GetSigmaMM();//--
+						Sigma_Tx = grid->GetSigma();//average of four XSs above
+						BSA_Tx = grid->GetBSA();//beam spin asym
+						TSA_Tx = grid->GetTSA();//target spin asym
+						DSA_Tx = grid->GetDSA();//double spin asym
+					}
+					/*Reading the Transverse Target Spin on x}}}*/	
+
+					/*Reading the Transverse Target Spin on y{{{*/	
+					SigmaPP_Ty = 1e-36;SigmaPM_Ty = 1e-36; SigmaMP_Ty = 1e-36; SigmaMM_Ty = 1e-36; 
+					Sigma_Ty = 1e-36;  BSA_Ty = 1e-36;TSA_Ty = 1e-36;DSA_Ty = 1e-36;
+
+					TargetPol = "Ty";
+					err = grid->LoadXS(TargetPol);
+					if(err>=0){
+						//grid->PrintXS();
+						SigmaPP_Ty = grid->GetSigmaPP();//++
+						SigmaPM_Ty = grid->GetSigmaPM();//+-
+						SigmaMP_Ty = grid->GetSigmaMP();//-+
+						SigmaMM_Ty = grid->GetSigmaMM();//--
+						Sigma_Ty = grid->GetSigma();//average of four XSs above
+						BSA_Ty = grid->GetBSA();//beam spin asym
+						TSA_Ty = grid->GetTSA();//target spin asym
+						DSA_Ty = grid->GetDSA();//double spin asym
+					}
+					/*Reading the Transverse Target Spin on y}}}*/	
+
 					/*Get Beam Time{{{*/
 					Double_t day = 0; // days
 					// nevents = dxs (nbar) * L (nucleons/cm^2/s) * T(days) 
@@ -351,9 +381,9 @@ Int_t main(Int_t argc, char *argv[]){
 					//weight_p=XS_P*PSF/N_gen*nBcm2*Lumi*time*total_acceptance;   //in Count 
 					//weight_m=XS_M*PSF/N_gen*nBcm2*Lumi*time*total_acceptance;   //in Count 
 					//cerr<<Form("XS=%e,total_acceptance = %f, time=%e, weight_p=%f, weight_m=%f ", (XS_P+XS_M), total_acceptance, time,weight_p, weight_m)<<endl;
-		
+
 					t1->Fill();
-					if(!(k%10000))
+					if(!(i%10000))
 						cerr<<Form("--- Working on Q2_bin#=%d, x_bin#=%d, evt=%d",i,j,k)<<"\r";
 				}
 			}
@@ -362,6 +392,7 @@ Int_t main(Int_t argc, char *argv[]){
 		}
 	}
 
+	delete grid;
 	delete T;
 	return 0;
 }
