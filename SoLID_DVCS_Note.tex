@@ -1,0 +1,35 @@
+\documentclass[a4paper,10pt]{report}
+\usepackage[utf8x]{inputenc}
+
+% Title Page
+\title{DVCS Simulation with SoLID-SIDIS configuration}
+\author{Zhihong Ye \\ Duke University}
+
+
+\begin{document}
+\maketitle
+\begin{abstract}
+   This report quicly summaries my study of the DVCS simulation with the SoLID-SIDIS configuration. Results are preliminary and will be constantly updated.
+\end{abstract}
+
+\section{Monte Carlo Simulation Data}
+  The simulated events were generated with Carlos's generator. In general, it is straightforward to generate an event with random combination of $Q^{2}$, $x_{bj}$, $t$ and $\phi$, and calculate the energy, momentum and angles of both the electron and photon. I implemented a slightly wider SoLID-SIDIS acceptance to judge whether both particles can be accepted by SoLID. In the generator, the phase space I used to randomly generate events is given as:
+ \begin{equation}
+    Q^{2}_{min} = 1.0 GeV^{2},  Q^{2}_{max} = 13.0 GeV^{2}, x_{bj}_{min} = 0.1, x_{bj}_{max} = 0.8,   t_{min} = -2.0, t_{max} = 0.0, and \phi_{min}=0^{\circ}, \phi_{max} = 360^{\circ}.     
+ \end{equation}
+
+ Two energy settings were generated, $E_{beam}=8.8~GeV, 11~GeV$, and in each setting, the total number of generated events is:
+ \begin{equation}
+     N_{gen} = 20,000,000.
+ \end{equation}
+ And only events that are in the SoLID coverage can be stored in a ROOT file.
+
+ In SoLID-SIDIS configuration, we detecto electrons and photons at both the large-angle electromagnetic-calorimeter (LAEC) and the forward-angle electromagnetic-calorimeter (FAEC). The coverage of the detectors coded in the generator is:
+  \begin{equation}
+     FAEC: #
+  \end{equation}
+
+ 
+ The more accurate and complicated SoLID-SIDIS acceptance was applied afterward. We extracted the acceptance profiles of electrons and neutral particles (e.g. photons) from our SoLID GEANT4 simulation which contains the magnetic filed, the realistic geometries and materials of the magnet and all detectors. The acceptance profiles are basically the 2-D histograms of particle momentum .vs. polar angle (i.e., $E'.vs.\theta$). Simply speaking, the acceptance value is equal to one if the particle is accepted by our detectors.
+
+\end{document}          
