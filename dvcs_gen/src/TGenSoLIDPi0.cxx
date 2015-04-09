@@ -22,7 +22,7 @@ ClassImp(TGenSoLIDPi0)
 ///////////////////////////////////////////////////////////////////////////////
 
 //_____________________________________________________________________________
-  TGenSoLIDPi0::TGenSoLIDPi0(Double_t Ebeam, Int_t TargType, UInt_t seed1, UInt_t seed2):TGenBase(Ebeam,seed1,seed2)
+  TGenSoLIDPi0::TGenSoLIDPi0(Double_t Ebeam, Int_t TargType, UInt_t seed1, UInt_t seed2):TGenBase(Ebeam,TargType,seed1,seed2)
 {
   // Default constructor
   // Initial 4-vectors are initialized

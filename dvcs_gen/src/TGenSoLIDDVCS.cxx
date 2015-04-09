@@ -23,7 +23,7 @@ ClassImp(TGenSoLIDDVCS)
 ////////////////////////////////////////////////////////////////////////////////
 
 //_____________________________________________________________________________
-  TGenSoLIDDVCS::TGenSoLIDDVCS(Double_t Ebeam, Int_t TargType, UInt_t seed1, UInt_t seed2):TGenBase(Ebeam,seed1,seed2)
+  TGenSoLIDDVCS::TGenSoLIDDVCS(Double_t Ebeam, Int_t TargType, UInt_t seed1, UInt_t seed2):TGenBase(Ebeam,TargType, seed1,seed2)
 {
   // Default constructor
   // Initial 4-vectors are initialized
@@ -35,12 +35,11 @@ ClassImp(TGenSoLIDDVCS)
   fdmom=0;
   frho=0;
   fTargType=TargType;
-
   if(fTargType!=1 && fTargType!=0 && fTargType!=2 && fTargType!=3){
     cout<<"Unknown target for SoLIDDVCS Event generator"<<endl;
     exit(1);
   }
-
+  
   if(fTargType==0) fm=PMass();
   if(fTargType==1) fm=NMass();
   if(fTargType==2) fm=DMass();
@@ -83,7 +82,7 @@ ClassImp(TGenSoLIDDVCS)
   }
 
   CFF=new Double_t[8];
-  ifstream f("./CFFoutput_LO.dat");
+  ifstream f("./src/CFFoutput_LO.dat");
   Double_t dum1,dum2,dum3;
   for ( register unsigned int iQ2 = 0; iQ2 < 13; iQ2++ ) {
     for ( register unsigned int iXb = 0; iXb < 80; iXb++ ) {
@@ -213,10 +212,15 @@ Double_t TGenSoLIDDVCS::XSecSum(int opt)
 
   fSigmaP = TMath::Pi() * SigmaTotPlus * ConvGeV2nbarn;
   fSigmaM = TMath::Pi() * SigmaTotMoins * ConvGeV2nbarn;
-
   //Added by Z. Ye to avoid nan
   if(isnan(fSigmaP))  fSigmaP = 1e-33;
   if(isnan(fSigmaM))  fSigmaM = 1e-33;
+
+
+  fSigmaBHp = TMath::Pi() * BHp * ConvGeV2nbarn;
+  fSigmaBHm = TMath::Pi() * BHm * ConvGeV2nbarn;
+  if(isnan(fSigmaBHp))  fSigmaBHp = 1e-33;
+  if(isnan(fSigmaBHm))  fSigmaBHm = 1e-33;
 
   return (fSigmaP +fSigmaM );
   
@@ -833,7 +837,7 @@ void TGenSoLIDDVCS::Write2File(void)
   *output<<fg->Px()<<" "<<fg->Py()<<" "<<fg->Pz()<<" ";
   *output<<fp->Px()<<" "<<fp->Py()<<" "<<fp->Pz()<<" ";
   *output<<fQ2<<" "<<fxb<<" "<<ft<<" "<<fphi<<" ";//add four kin. variables, Z. Ye 03/11/2015
-  *output<<fSigmaP<<" "<<fSigmaM<<" "<<fPSF<<endl;
+  *output<<fSigmaP<<" "<<fSigmaM<<" "<<fSigmaBHp<<" "<<fSigmaBHm<<" "<<fPSF<<endl;
   //  *output<<fVertez->Pz()<<endl;
   // *output<<endl;
 }

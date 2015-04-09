@@ -48,7 +48,7 @@ Bool_t           TGenBase::fgWarnings = kTRUE;
 Bool_t           TGenBase::fgErrors = kTRUE;
 
 //_____________________________________________________________________________
- TGenBase::TGenBase(Double_t Ebeam, UInt_t seed1, UInt_t seed2)
+ TGenBase::TGenBase(Double_t Ebeam, Int_t TargType, UInt_t seed1, UInt_t seed2)
 {
   // Default constructor
   // The default behaviour is : seeds 1 and 2, we ask for a particle in 
@@ -57,6 +57,7 @@ Bool_t           TGenBase::fgErrors = kTRUE;
   // Default detectors acceptances are set.
 
   fEbeam=Ebeam;
+  fTargType=TargType;
   feini=new TLorentzVector(0.,0.,fEbeam,fEbeam);//We neglect electron mass
   feprerad=new TLorentzVector(0.,0.,0.,0.);
 
@@ -68,7 +69,10 @@ Bool_t           TGenBase::fgErrors = kTRUE;
 
   fVertex=0;
   fNwrite=0;
-  output=new ofstream("out.txt.tmp");
+  
+  fOutTempFile = Form("temp_dvcs_E%d_T%d.txt", (int) (fEbeam), fTargType);
+  cerr<<Form("--- Saving data into a temperate file = %s", fOutTempFile.Data())<<endl;
+  output=new ofstream(fOutTempFile);
 }
 
 //_____________________________________________________________________________
@@ -529,8 +533,8 @@ void TGenBase::CloseTmpFile()
 void TGenBase::DumpFinalFile(char* finalfile, Int_t Ngen, Int_t Nacc)
 {
 
-  cout<<"Dumping final file..."<<endl;
-  ifstream input("out.txt.tmp");
+  cout<<Form("Dumping final file from %s...", fOutTempFile.Data())<<endl;
+  ifstream input(fOutTempFile);
   ofstream totofile(finalfile);
   totofile<<Ngen<<endl;
   totofile<<Nacc<<endl;
@@ -557,7 +561,7 @@ void TGenBase::DumpFinalFile(char* finalfile, Int_t Ngen, Int_t Nacc)
     }
   }
   input.close();
- // remove("out.txt.tmp");
+ // remove(fOutTempFile);
   totofile.close();
 }
 
@@ -566,14 +570,14 @@ void TGenBase::DumpRootFile(char* finalfile, Int_t Ngen, Int_t Nacc)
 {
 
 	if(Nacc>0){ 
-		cout<<Form("--> Dumping #%d events into the ROOT file ...", Nacc)<<endl;
-		ifstream input("out.txt.tmp");
+		cout<<Form("--> Dumping #%d events from %s into the ROOT file ...", Nacc, fOutTempFile.Data())<<endl;
+		ifstream input(fOutTempFile);
 
 		Double_t vertexz, E0; 
 		Double_t ePx_ini, ePy_ini, ePz_ini, hPx_ini, hPy_ini,hPz_ini;
 		Double_t ePx, ePy, ePz, gPx, gPy, gPz, hPx, hPy, hPz;
 		Double_t eP_ini,hP_ini, eP, gP,hP;
-		Double_t Q2, x, t, phi, XS_P, XS_M,PSF;
+		Double_t Q2, x, t, phi, XS_P, XS_M, XS_BHp, XS_BHm, PSF;
 		Double_t ePhi_ini,hPhi_ini, ePhi, gPhi,hPhi;
 		Double_t eTheta_ini,hTheta_ini, eTheta, gTheta,hTheta;
 
@@ -629,13 +633,16 @@ void TGenBase::DumpRootFile(char* finalfile, Int_t Ngen, Int_t Nacc)
 		T->Branch("PSF", &PSF, "PSF/D");
 		T->Branch("Ngen", &Ngen, "Ngen/I");
 		T->Branch("Nacc", &Nacc, "Nacc/I");
+		T->Branch("XS_BHp", &XS_BHp, "XS_BHp/D");
+		T->Branch("XS_BHm", &XS_BHm, "XS_BHm/D");
+
 
 		for(int i=0;i<Nacc;i++){
 			input >> vertexz >> E0>> ePx_ini >> ePy_ini >> ePz_ini;
 			if(fFermi)
 				input>> hPx_ini >> hPy_ini >> hPz_ini;
 			input >> ePx >> ePy >> ePz >> gPx >> gPy >> gPz >> hPx >> hPy >> hPz
-				  >> Q2 >> x >> t >> phi >> XS_P >> XS_M >> PSF;
+				  >> Q2 >> x >> t >> phi >> XS_P >> XS_M >> XS_BHp >> XS_BHm >> PSF;
 
 			eP_ini = sqrt( pow(ePx_ini,2)+pow(ePy_ini,2)+pow(ePz_ini,2));
 			hP_ini = sqrt( pow(hPx_ini,2)+pow(hPy_ini,2)+pow(hPz_ini,2));
@@ -663,7 +670,7 @@ void TGenBase::DumpRootFile(char* finalfile, Int_t Ngen, Int_t Nacc)
 
 		rootfile->cd(); T->Write(); rootfile->Close();
 
-		remove("out.txt.tmp");
+		remove(fOutTempFile);
 	}else{
 		cout<<Form("*** #%d events: failed to create the ROOT file ...", Nacc)<<endl;
 	}
@@ -676,7 +683,7 @@ void TGenBase::DumpRootFilePi0(char* finalfile, Int_t Ngen, Int_t Nacc)
 
 	if(Nacc>0){ 
 		cout<<Form("--> Dumping #%d events into the ROOT file ...", Nacc)<<endl;
-		ifstream input("out.txt.tmp");
+		ifstream input(fOutTempFile);
 
 		Double_t vertexz, E0; 
 		Double_t ePx_ini, ePy_ini, ePz_ini, hPx_ini, hPy_ini,hPz_ini;
@@ -783,7 +790,7 @@ void TGenBase::DumpRootFilePi0(char* finalfile, Int_t Ngen, Int_t Nacc)
 
 		rootfile->cd(); T->Write(); rootfile->Close();
 
-		remove("out.txt.tmp");
+		remove(fOutTempFile);
 	}else{
 		cout<<Form("*** #%d events: failed to create the ROOT file ...", Nacc)<<endl;
 	}

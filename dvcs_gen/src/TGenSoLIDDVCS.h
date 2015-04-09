@@ -58,6 +58,9 @@ class TGenSoLIDDVCS : public TGenBase
 	Double_t    fSigma_LmTYp;   // Sigma plus cross-section
 	Double_t    fSigma_LmTYm;   // Sigma minus cross-section
 
+	Double_t    fSigmaBHp;
+	Double_t    fSigmaBHm;
+
     Double_t ft;           // t for the event
     Double_t fs;           // s of the reaction
     Double_t fphi;         // phi of the event

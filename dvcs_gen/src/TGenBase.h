@@ -61,10 +61,11 @@ class TGenBase : public TGenSoLIDGeo
 
   ofstream* output; //! Temporary output file
   Int_t fNwrite; //! Number of parameters per event to write
+  TString fOutTempFile;
 
   public :
 
-  TGenBase(Double_t Ebeam, UInt_t seed1=1, UInt_t seed2=2);
+  TGenBase(Double_t Ebeam, Int_t TargType, UInt_t seed1=1, UInt_t seed2=2);
   TGenBase(const TGenBase&);
   virtual ~TGenBase();
 
