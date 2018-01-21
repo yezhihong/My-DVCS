@@ -1,0 +1,13 @@
+JOBNAME: aao_gen
+PROJECT: clas
+COMMAND: /home/bkeeney/packages/aao_gen/aaogen.pl
+OPTIONS: 
+MAIL: bkeeney@jlab.org
+OS: solaris
+#OS: linux
+#OS: aix
+#INPUT_FILES: /mss/home/kjoo/may-nstar/dst/clas_008902.A02.dst
+#INPUT_DATA:  infile
+#OUTPUT_DATA:  aaoradgen*
+#OUTPUT_TEMPLATE: /work/clas/disk1/bkeeney/aao_gen/OUTPUT_DATA
+

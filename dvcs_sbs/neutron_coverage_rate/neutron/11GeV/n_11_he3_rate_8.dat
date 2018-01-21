@@ -1,0 +1,7 @@
+______Single integral rate____________________
+eletron rate_forward: 0.0512367
+eletron rate_large: 0.00302698
+photon rate: 0.0415373
+______forward and large angle integral rate____________________
+rate_forward: 0.0145476
+rate_large: 0.00123015
